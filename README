@@ -1,0 +1,175 @@
+NAME
+    Perinci::Sub::Gen::FromClass - Generate function (and its Rinci
+    metadata) from a class
+
+VERSION
+    This document describes version 0.01 of Perinci::Sub::Gen::FromClass
+    (from Perl distribution Perinci-Sub-Gen-FromClass), released on
+    2014-08-04.
+
+SYNOPSIS
+    Given a Mo/Moo/Mouse/Moose class:
+
+        # MyClass
+        use Moo;
+        has attr1 => (is => 'ro', required=>1);
+        has attr2 => (is => 'rw');
+        sub do_this { ... }
+        sub do_that { ... }
+        1;
+
+    you can generate a function for it:
+
+        use Perinci::Sub::Gen::FromClass qw(gen_func_from_class);
+        gen_func_from_class(
+            name   => 'do_this',
+
+            class  => 'MyClass',
+            type   => 'Moo',
+            method => 'do_this',
+            method_args => [3, 4, 5], # optional
+        );
+
+    then if you call this function:
+
+        do_this(attr1=>1, attr2=>2);
+
+    it will do something like (instantiate class and call a method):
+
+        MyClass->new(attr1=>1, attr2=>2)->do_this(3, 4, 5);
+
+DESCRIPTION
+    Sometimes some module annoyingly only provides OO interface like:
+
+     my $obj = Foo->new(arg1=>1, arg2=>2);
+     $obj->some_action;
+
+    when it could very well just be:
+
+     some_action(arg1=>1, arg2=>2);
+
+    This module helps you create that function from a class.
+
+FUNCTIONS
+  gen_func_from_class(%args) -> [status, msg, result, meta]
+    Generate function from a class.
+
+    "gen_func_from_class" will create a function and Rinci metadata from a
+    {Mo,Moo,Moose,Mouse} class. Given a class like this:
+
+     # MyClass
+     use Moo;
+     has attr1 => (is => 'ro', required=>1);
+     has attr2 => (is => 'rw');
+     sub meth1 { ... }
+     sub meth2 { ... }
+     1;
+
+    will create a function that does something like this (it will basically
+    instantiate a class, set its attributes, and call a method):
+
+     MyClass->new(attr1=>..., attr2=>...)->meth1;
+
+    along with Rinci metadata like this:
+
+     {
+         v => 1.1,
+         args => {
+             attr1 => { req=>1, schema=>'any' },
+             attr2 => { schema=>'any' },
+         },
+     }
+
+    Currently only Moo-based class is supported. Support for other Mo*
+    family members will be added.
+
+    Arguments ('*' denotes required arguments):
+
+    *   class* => *any*
+
+        Class name, will be loaded with require() unless when `load` is
+        false.
+
+    *   description => *str*
+
+        Generated function's description.
+
+    *   install => *bool* (default: 1)
+
+        Whether to install generated function (and metadata).
+
+        By default, generated function will be installed to the specified
+        (or caller's) package, as well as its generated metadata into %SPEC.
+        Set this argument to false to skip installing.
+
+    *   load* => *bool* (default: 1)
+
+        Whether to load the class.
+
+    *   method* => *any*
+
+        Method of class to call.
+
+    *   method_args => *array*
+
+    *   name => *str*
+
+        Generated function's name, e.g. `myfunc`.
+
+    *   package => *str*
+
+        Generated function's package, e.g. `My::Package`.
+
+        This is needed mostly for installing the function. You usually don't
+        need to supply this if you set "install" to false.
+
+        If not specified, caller's package will be used by default.
+
+    *   summary => *str*
+
+        Generated function's summary.
+
+    Return value:
+
+    Returns an enveloped result (an array).
+
+    First element (status) is an integer containing HTTP status code (200
+    means OK, 4xx caller error, 5xx function error). Second element (msg) is
+    a string containing error message, or 'OK' if status is 200. Third
+    element (result) is optional, the actual result. Fourth element (meta)
+    is called result metadata and is optional, a hash that contains extra
+    information.
+
+    A hash containing generated function, metadata (hash)
+
+TODO
+    Translate "isa" option in "has" into argument schema.
+
+SEE ALSO
+    Rinci
+
+HOMEPAGE
+    Please visit the project's homepage at
+    <https://metacpan.org/release/Perinci-Sub-Gen-FromClass>.
+
+SOURCE
+    Source repository is at
+    <https://github.com/sharyanto/perl-Perinci-Sub-Gen-FromClass>.
+
+BUGS
+    Please report any bugs or feature requests on the bugtracker website
+    <https://rt.cpan.org/Public/Dist/Display.html?Name=Perinci-Sub-Gen-FromC
+    lass>
+
+    When submitting a bug or request, please include a test-file or a patch
+    to an existing test-file that illustrates the bug or desired feature.
+
+AUTHOR
+    Steven Haryanto <stevenharyanto@gmail.com>
+
+COPYRIGHT AND LICENSE
+    This software is copyright (c) 2014 by Steven Haryanto.
+
+    This is free software; you can redistribute it and/or modify it under
+    the same terms as the Perl 5 programming language system itself.
+
