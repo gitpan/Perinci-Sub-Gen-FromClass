@@ -1,13 +1,13 @@
 package Perinci::Sub::Gen::FromClass;
 
 our $DATE = '2014-08-04'; # DATE
-our $VERSION = '0.01'; # VERSION
+our $VERSION = '0.02'; # VERSION
 
 use 5.010001;
 use strict;
 use warnings;
 
-#use Monkey::Patch::Action qw(patch_package);
+use Monkey::Patch::Action qw(patch_package);
 use Perinci::Sub::Gen;
 
 require Exporter;
@@ -47,27 +47,20 @@ along with Rinci metadata like this:
         },
     }
 
-Currently only Moo-based class is supported. Support for other Mo* family
-members will be added.
+Currently only Mo- and Moo-based class is supported. Support for other Mo*
+family members will be added.
 
 _
     args => {
         %Perinci::Sub::Gen::common_args,
         class => {
-            summary => 'Class name, will be loaded with require() unless when '.
-                '`load` is false',
+            summary => 'Class name, will be loaded with require()',
             req => 1,
         },
         method => {
             summary => 'Method of class to call',
             req => 1,
             # XXX guess if not specified?
-        },
-        load => {
-            summary => 'Whether to load the class',
-            schema => 'bool',
-            default => 1,
-            req => 1,
         },
         method_args => {
             schema => 'array*',
@@ -86,12 +79,53 @@ sub gen_func_from_class {
         return [400, "Invalid value for 'class', please use Foo::Bar ".
                     "syntax only"];
     my $method = $args{method} or return [400, "Please specify 'method'"];
-    if ($args{load} // 1) {
+
+    my %mo_attrs;
+    {
+        my $handle_mo;
+        # doesn't work if Mo is inlined
+        if (eval "require Mo; 1") {
+            require Mo::default;
+            require Mo::required;
+            my $M = "Mo::";
+            # copied and modified from Mo 0.38
+            $handle_mo = patch_package(
+                'Mo', 'import', 'replace',
+                sub {
+    no strict; ###
+    import warnings;
+    $^H |= 1538;
+    my ( $P, %e, %o ) = caller . '::';
+    shift;
+    eval "no Mo::$_", &{ $M . $_ . '::e' }( $P, \%e, \%o, \@_ ) for @_;
+    return if $e{M};
+    %e = ( 'extends',
+        sub { eval "no $_[0]()"; @{ $P . ISA } = $_[0] },
+        'has',
+        sub {
+            my $n = shift;
+            my $p = $P; $p =~ s/::$//; $mo_attrs{$p}{$n} = {@_}; ###
+            my $m = sub { $#_ ? $_[0]{$n} = $_[1] : $_[0]{$n} };
+            @_ = ( 'default', @_ ) if !( $#_ % 2 );
+            $m = $o{$_}->( $m, $n, @_ ) for sort keys %o;
+            *{ $P . $n } = $m;
+        },
+        %e,
+    );
+    *{ $P . $_ } = $e{$_} for keys %e;
+    @{ $P . ISA } = $M . Object;
+                },
+            );
+        }
+        # to support Mouse and Moose we'll need to let user enable it, because
+        # of the startup overhead
         my $classp = $class;
         $classp =~ s!::!/!g; $classp .= ".pm";
         require $classp;
     }
+
     my $install = $args{install} // 1;
+
     my $fqname = $args{name} // 'noname';
     return [400, "Please specify 'name'"] unless $fqname || !$install;
     my @caller = caller();
@@ -106,19 +140,33 @@ sub gen_func_from_class {
     }
 
     my %func_args;
-    my $doit = sub {
-        my $pkg = shift;
-        # attribute specs
-        my $ass = $Moo::MAKERS{$pkg}{constructor}{attribute_specs};
-        for my $k (keys %$ass) {
-            my $v = $ass->{$k};
-            $func_args{$k} = {
-                req => $v->{required} ? 1:0,
-            };
-        }
-    };
-    # XXX climb up @ISA
-    $doit->($class);
+    {
+        my $doit;
+        $doit = sub {
+            no strict 'refs';
+            my $pkg = shift;
+            my $ass = $mo_attrs{$pkg} //
+                $Moo::MAKERS{$pkg}{constructor}{attribute_specs};
+            if ($ass) {
+                for my $k (keys %$ass) {
+                    my $v = $ass->{$k};
+                    my $as = {
+                        req => $v->{required} ? 1:0,
+                    };
+                    if (exists $v->{default}) {
+                        if (ref($v->{default}) eq 'CODE') {
+                            $as->{default} = $v->{default}->();
+                        } else {
+                            $as->{default} = $v->{default};
+                        }
+                    }
+                    $func_args{$k} = $as;
+                }
+            }
+            $doit->($_) for @{"$pkg\::ISA"};
+        };
+        $doit->($class);
+    }
 
     my $meta = {
         v => 1.1,
@@ -136,7 +184,7 @@ sub gen_func_from_class {
         if ($args{method_args}) {
             @meth_args = @{ $args{method_args} };
         }
-        $obj->$method->(@meth_args);
+        $obj->$method(@meth_args);
     };
 
     if ($install) {
@@ -165,7 +213,7 @@ Perinci::Sub::Gen::FromClass - Generate function (and its Rinci metadata) from a
 
 =head1 VERSION
 
-This document describes version 0.01 of Perinci::Sub::Gen::FromClass (from Perl distribution Perinci-Sub-Gen-FromClass), released on 2014-08-04.
+This document describes version 0.02 of Perinci::Sub::Gen::FromClass (from Perl distribution Perinci-Sub-Gen-FromClass), released on 2014-08-04.
 
 =head1 SYNOPSIS
 
@@ -245,8 +293,8 @@ along with Rinci metadata like this:
      },
  }
 
-Currently only Moo-based class is supported. Support for other Mo* family
-members will be added.
+Currently only Mo- and Moo-based class is supported. Support for other Mo*
+family members will be added.
 
 Arguments ('*' denotes required arguments):
 
@@ -254,7 +302,7 @@ Arguments ('*' denotes required arguments):
 
 =item * B<class>* => I<any>
 
-Class name, will be loaded with require() unless when `load` is false.
+Class name, will be loaded with require().
 
 =item * B<description> => I<str>
 
@@ -267,10 +315,6 @@ Whether to install generated function (and metadata).
 By default, generated function will be installed to the specified (or caller's)
 package, as well as its generated metadata into %SPEC. Set this argument to
 false to skip installing.
-
-=item * B<load>* => I<bool> (default: 1)
-
-Whether to load the class.
 
 =item * B<method>* => I<any>
 

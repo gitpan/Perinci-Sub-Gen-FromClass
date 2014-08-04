@@ -3,7 +3,7 @@ NAME
     metadata) from a class
 
 VERSION
-    This document describes version 0.01 of Perinci::Sub::Gen::FromClass
+    This document describes version 0.02 of Perinci::Sub::Gen::FromClass
     (from Perl distribution Perinci-Sub-Gen-FromClass), released on
     2014-08-04.
 
@@ -80,15 +80,14 @@ FUNCTIONS
          },
      }
 
-    Currently only Moo-based class is supported. Support for other Mo*
-    family members will be added.
+    Currently only Mo- and Moo-based class is supported. Support for other
+    Mo* family members will be added.
 
     Arguments ('*' denotes required arguments):
 
     *   class* => *any*
 
-        Class name, will be loaded with require() unless when `load` is
-        false.
+        Class name, will be loaded with require().
 
     *   description => *str*
 
@@ -101,10 +100,6 @@ FUNCTIONS
         By default, generated function will be installed to the specified
         (or caller's) package, as well as its generated metadata into %SPEC.
         Set this argument to false to skip installing.
-
-    *   load* => *bool* (default: 1)
-
-        Whether to load the class.
 
     *   method* => *any*
 

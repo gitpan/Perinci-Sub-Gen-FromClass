@@ -10,6 +10,9 @@ dist.ini
 lib/Perinci/Sub/Gen/FromClass.pm
 t/00-compile.t
 t/01-basics.t
+t/lib/Bar/Mo.pm
+t/lib/Bar/Moo.pm
+t/lib/Foo/Mo.pm
 t/lib/Foo/Moo.pm
 t/release-pod-coverage.t
 t/release-pod-syntax.t

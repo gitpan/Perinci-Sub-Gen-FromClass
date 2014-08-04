@@ -18,6 +18,10 @@ meta-spec:
   version: '1.4'
 name: Perinci-Sub-Gen-FromClass
 requires:
+  Mo: '0'
+  Mo::default: '0'
+  Mo::required: '0'
+  Monkey::Patch::Action: '0'
   Perinci::Sub::Gen: '0'
   Rinci: v1.1.13
   perl: '5.010001'
@@ -25,7 +29,7 @@ resources:
   bugtracker: https://rt.cpan.org/Public/Dist/Display.html?Name=Perinci-Sub-Gen-FromClass
   homepage: https://metacpan.org/release/Perinci-Sub-Gen-FromClass
   repository: git://github.com/sharyanto/perl-Perinci-Sub-Gen-FromClass.git
-version: '0.01'
+version: '0.02'
 x_Dist_Zilla:
   perl:
     version: '5.018001'
@@ -254,6 +258,10 @@ x_Dist_Zilla:
           type: requires
       name: Prereqs
       version: '5.015'
+    -
+      class: Dist::Zilla::Plugin::Extras
+      name: 'lint-prereqs / assume-provided'
+      version: '0.01'
     -
       class: Dist::Zilla::Plugin::FinderCode
       name: ':InstallModules'

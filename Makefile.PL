@@ -21,6 +21,10 @@ my %WriteMakefileArgs = (
   "LICENSE" => "perl",
   "NAME" => "Perinci::Sub::Gen::FromClass",
   "PREREQ_PM" => {
+    "Mo" => 0,
+    "Mo::default" => 0,
+    "Mo::required" => 0,
+    "Monkey::Patch::Action" => 0,
     "Perinci::Sub::Gen" => 0,
     "Rinci" => "v1.1.13"
   },
@@ -31,7 +35,7 @@ my %WriteMakefileArgs = (
     "Moo" => 0,
     "Test::More" => "0.98"
   },
-  "VERSION" => "0.01",
+  "VERSION" => "0.02",
   "test" => {
     "TESTS" => "t/*.t"
   }
@@ -42,6 +46,10 @@ my %FallbackPrereqs = (
   "File::Spec" => 0,
   "IO::Handle" => 0,
   "IPC::Open3" => 0,
+  "Mo" => 0,
+  "Mo::default" => 0,
+  "Mo::required" => 0,
+  "Monkey::Patch::Action" => 0,
   "Moo" => 0,
   "Perinci::Sub::Gen" => 0,
   "Rinci" => "v1.1.13",

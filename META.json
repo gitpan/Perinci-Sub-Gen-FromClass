@@ -29,6 +29,10 @@
       },
       "runtime" : {
          "requires" : {
+            "Mo" : "0",
+            "Mo::default" : "0",
+            "Mo::required" : "0",
+            "Monkey::Patch::Action" : "0",
             "Perinci::Sub::Gen" : "0",
             "Rinci" : "v1.1.13",
             "perl" : "5.010001"
@@ -56,7 +60,7 @@
          "web" : "https://github.com/sharyanto/perl-Perinci-Sub-Gen-FromClass"
       }
    },
-   "version" : "0.01",
+   "version" : "0.02",
    "x_Dist_Zilla" : {
       "perl" : {
          "version" : "5.018001"
@@ -349,6 +353,11 @@
             },
             "name" : "Prereqs",
             "version" : "5.015"
+         },
+         {
+            "class" : "Dist::Zilla::Plugin::Extras",
+            "name" : "lint-prereqs / assume-provided",
+            "version" : "0.01"
          },
          {
             "class" : "Dist::Zilla::Plugin::FinderCode",
